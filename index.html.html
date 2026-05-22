@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>늘푸른동산 AI 도우미</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f7f7f5; --bg3: #f0f0ec;
+    --text: #1a1a18; --text2: #666662; --text3: #999994;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --info-bg: #e6f1fb; --info-text: #185fa5; --info-border: rgba(24,95,165,0.3);
+    --success-bg: #eaf3de; --success-text: #3b6d11;
+    --warn-bg: #faeeda; --warn-text: #854f0b;
+    --danger-bg: #fcebeb; --danger-text: #a32d2d;
+    --radius: 8px; --radius-lg: 12px;
+    --font: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #282825; --bg3: #323230;
+      --text: #f0f0ec; --text2: #aaa; --text3: #666;
+      --border: rgba(255,255,255,0.12); --border2: rgba(255,255,255,0.22);
+      --info-bg: #0c447c; --info-text: #b5d4f4; --info-border: rgba(181,212,244,0.3);
+      --success-bg: #27500a; --success-text: #c0dd97;
+      --warn-bg: #633806; --warn-text: #fac775;
+      --danger-bg: #791f1f; --danger-text: #f7c1c1;
+    }
+  }
+  body {
+    font-family: var(--font); background: var(--bg3);
+    color: var(--text); min-height: 100vh; padding: 1.5rem 1rem;
+  }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  header { margin-bottom: 1.5rem; }
+  header h1 { font-size: 22px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  header p { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+  .card {
+    background: var(--bg); border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border); padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .tab-bar {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+  .tab-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    background: var(--bg); color: var(--text2);
+    font-size: 13px; cursor: pointer; font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { background: var(--bg2); color: var(--text); }
+  .tab-btn.active { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+  .tab-btn i { font-size: 16px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .section-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.25rem; line-height: 1.6; }
+
+  .field-group { margin-bottom: 1rem; }
+  .field-label { font-size: 13px; color: var(--text2); margin-bottom: 6px; display: block; }
+
+  textarea, input[type=text], select {
+    width: 100%; padding: 9px 12px; font-size: 14px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg); color: var(--text);
+    font-family: var(--font); resize: vertical;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, input:focus, select:focus {
+    outline: none; border-color: var(--info-border);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.08);
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: var(--radius);
+    background: var(--info-bg); color: var(--info-text);
+    border: 0.5px solid var(--info-border);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    font-family: var(--font); transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.8; }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius);
+    background: var(--bg2); color: var(--text2);
+    border: 0.5px solid var(--border);
+    font-size: 13px; cursor: pointer; font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { color: var(--text); border-color: var(--border2); }
+
+  .result-box {
+    margin-top: 1.25rem; padding: 1rem 1.25rem;
+    background: var(--bg2); border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    font-size: 14px; line-height: 1.8; color: var(--text);
+    white-space: pre-wrap; display: none; position: relative;
+  }
+  .result-box.show { display: block; }
+  .copy-btn { position: absolute; top: 10px; right: 10px; }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tag {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
+    border: 0.5px solid var(--border); background: var(--bg); color: var(--text2);
+    font-family: var(--font); transition: all 0.12s;
+  }
+  .tag:hover, .tag.sel { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .metric-card { background: var(--bg2); border-radius: var(--radius); padding: 0.875rem 1rem; }
+  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .metric-card input {
+    font-size: 15px; font-weight: 600; border: none;
+    background: transparent; padding: 0; color: var(--text);
+    font-family: var(--font); width: 100%;
+  }
+  .metric-card input:focus { outline: none; box-shadow: none; border: none; }
+
+  .chat-wrap {
+    height: 340px; overflow-y: auto; margin-bottom: 1rem; padding: 12px;
+    background: var(--bg2); border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+  }
+  .chat-msg { margin-bottom: 12px; }
+  .chat-msg .who { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+  .chat-msg .bubble {
+    display: inline-block; padding: 9px 13px; border-radius: var(--radius);
+    font-size: 14px; line-height: 1.65; max-width: 88%;
+  }
+  .chat-msg.user .bubble { background: var(--info-bg); color: var(--info-text); }
+  .chat-msg.ai .bubble { background: var(--bg); border: 0.5px solid var(--border); color: var(--text); }
+
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input-row input { flex: 1; }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  @keyframes dots {
+    0%, 100% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
+  }
+  .loading-dots::after { content: ''; animation: dots 1.2s steps(4,end) infinite; }
+
+  footer { text-align: center; font-size: 12px; color: var(--text3); margin-top: 2rem; }
+
+  @media (max-width: 600px) {
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .tab-btn span { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><i class="ti ti-plant-2" style="font-size:24px;color:#1d9e75"></i> 늘푸른동산 AI 도우미</h1>
+    <p>복지관 업무를 AI로 더 빠르고 쉽게 — 문서 작성, 케어 기록, 차량 관리, 업무 안내, 이상 감지</p>
+  </header>
+
+  <div class="card">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('doc')" id="t-doc">
+        <i class="ti ti-file-text"></i> <span>문서 작성</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('care')" id="t-care">
+        <i class="ti ti-heart"></i> <span>케어 기록</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('vehicle')" id="t-vehicle">
+        <i class="ti ti-car"></i> <span>차량 분석</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('bot')" id="t-bot">
+        <i class="ti ti-message-circle"></i> <span>업무 챗봇</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('alert')" id="t-alert">
+        <i class="ti ti-bell"></i> <span>이상 감지</span>
+      </button>
+    </div>
+
+    <!-- 1. 문서 작성 -->
+    <div class="panel active" id="p-doc">
+      <p class="section-title">AI 문서 작성 도우미</p>
+      <p class="section-sub">핵심 내용만 입력하면 공문, 회의록, 보고서 초안을 자동 작성합니다.</p>
+      <div class="field-group">
+        <label class="field-label">문서 유형 선택</label>
+        <div class="tag-row" id="doc-types">
+          <div class="tag sel" onclick="selTag(this,'doc')">팀장회의 회의록</div>
+          <div class="tag" onclick="selTag(this,'doc')">발송 공문</div>
+          <div class="tag" onclick="selTag(this,'doc')">업무 보고서</div>
+          <div class="tag" onclick="selTag(this,'doc')">프로그램 계획서</div>
+          <div class="tag" onclick="selTag(this,'doc')">활동일지</div>
+          <div class="tag" onclick="selTag(this,'doc')">기타</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">핵심 내용 입력 (키워드나 메모)</label>
+        <textarea id="doc-input" rows="4" placeholder="예) 2025년 1월 팀장회의 / 참석: 팀장 5명 / 안건: 프로그램 개편, 인력 배치 / 결정사항: 3월부터 새 프로그램 시작"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="runDoc()" id="doc-btn"><i class="ti ti-sparkles"></i> AI로 초안 작성</button>
+        <button class="btn-secondary" onclick="clearResult('doc-result','doc-btn')">초기화</button>
+      </div>
+      <div class="result-box" id="doc-result">
+        <button class="btn-secondary copy-btn" onclick="copyResult('doc-result-text')"><i class="ti ti-copy"></i> 복사</button>
+        <span id="doc-result-text"></span>
+      </div>
+    </div>
+
+    <!-- 2. 케어 기록 -->
+    <div class="panel" id="p-care">
+      <p class="section-title">이용인 케어 기록 요약</p>
+      <p class="section-sub">이용인의 출석·활동·특이사항을 입력하면 월별 케어 리포트를 자동 생성합니다.</p>
+      <div class="field-group">
+        <label class="field-label">이용인 이름</label>
+        <input type="text" id="care-name" placeholder="예) 홍길동" style="max-width:200px;">
+      </div>
+      <div class="field-group">
+        <label class="field-label">기간 및 활동 기록</label>
+        <textarea id="care-input" rows="5" placeholder="예) 2025년 1월&#10;- 출석: 20일 / 결석: 2일 (1/5 감기, 1/19 외출)&#10;- 음악치료 15회 참여 — 적극적, 노래 따라부름&#10;- 특이사항: 1/12 기분 저하, 보호자에게 연락&#10;- 투약: 정상 복용"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="runCare()" id="care-btn"><i class="ti ti-sparkles"></i> 요약 리포트 생성</button>
+        <button class="btn-secondary" onclick="clearResult('care-result','care-btn')">초기화</button>
+      </div>
+      <div class="result-box" id="care-result">
+        <button class="btn-secondary copy-btn" onclick="copyResult('care-result-text')"><i class="ti ti-copy"></i> 복사</button>
+        <span id="care-result-text"></span>
+      </div>
+    </div>
+
+    <!-- 3. 차량 분석 -->
+    <div class="panel" id="p-vehicle">
+      <p class="section-title">차량 일지 분석</p>
+      <p class="section-sub">운행·정비 데이터를 입력하면 AI가 이상 징후와 정비 권고사항을 제공합니다.</p>
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-label">이번 달 운행거리</div>
+          <input type="text" id="v-km" placeholder="예) 1,240 km">
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">마지막 오일 교환</div>
+          <input type="text" id="v-oil" placeholder="예) 2024.11.10">
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">마지막 타이어 점검</div>
+          <input type="text" id="v-tire" placeholder="예) 2024.09.01">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">운행 기록 및 특이사항</label>
+        <textarea id="v-input" rows="4" placeholder="예) 1호차 1월 운행기록&#10;- 총 22회 운행, 주요 노선: 복지관↔이용인 자택&#10;- 1/8 브레이크 소리 발생, 정비소 점검 요청&#10;- 1/15 냉각수 경고등 점등 → 보충 완료"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="runVehicle()" id="v-btn"><i class="ti ti-sparkles"></i> AI 분석 시작</button>
+        <button class="btn-secondary" onclick="clearResult('v-result','v-btn')">초기화</button>
+      </div>
+      <div class="result-box" id="v-result">
+        <button class="btn-secondary copy-btn" onclick="copyResult('v-result-text')"><i class="ti ti-copy"></i> 복사</button>
+        <span id="v-result-text"></span>
+      </div>
+    </div>
+
+    <!-- 4. 챗봇 -->
+    <div class="panel" id="p-bot">
+      <p class="section-title">업무 안내 챗봇</p>
+      <p class="section-sub">차량 신청, 재택근무, 강당 예약 등 업무 절차를 바로 물어보세요.</p>
+      <div class="tag-row">
+        <div class="tag" onclick="quickAsk('차량 신청은 어떻게 하나요?')">차량 신청</div>
+        <div class="tag" onclick="quickAsk('재택근무 신청 절차를 알려주세요')">재택근무</div>
+        <div class="tag" onclick="quickAsk('강당 예약은 어떻게 하나요?')">강당 예약</div>
+        <div class="tag" onclick="quickAsk('투약의뢰 작성 방법을 알려주세요')">투약의뢰</div>
+        <div class="tag" onclick="quickAsk('활동일지 작성 요령을 알려주세요')">활동일지</div>
+        <div class="tag" onclick="quickAsk('발송대장과 접수대장 차이가 뭔가요?')">발송/접수대장</div>
+      </div>
+      <div class="chat-wrap" id="chat-wrap">
+        <div class="chat-msg ai">
+          <div class="who">AI 도우미</div>
+          <div class="bubble">안녕하세요! 늘푸른동산 업무 관련 궁금한 점을 질문해 주세요. 차량 신청, 재택근무, 강당 예약, 서류 작성 등 무엇이든 도와드리겠습니다 😊</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn-primary" onclick="sendChat()" id="chat-btn"><i class="ti ti-send"></i> 전송</button>
+      </div>
+    </div>
+
+    <!-- 5. 이상 감지 -->
+    <div class="panel" id="p-alert">
+      <p class="section-title">의료·활동 이상 감지</p>
+      <p class="section-sub">투약, 경련, 출석 기록 데이터를 붙여넣으면 AI가 이상 패턴을 분석합니다.</p>
+      <div class="field-group">
+        <label class="field-label">분석 유형</label>
+        <div class="tag-row" id="alert-types">
+          <div class="tag sel" onclick="selTag(this,'alert')">경련 기록 패턴</div>
+          <div class="tag" onclick="selTag(this,'alert')">투약 이상</div>
+          <div class="tag" onclick="selTag(this,'alert')">출석·행동 변화</div>
+          <div class="tag" onclick="selTag(this,'alert')">종합 분석</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">기록 데이터 입력</label>
+        <textarea id="alert-input" rows="6" placeholder="예) 이름: 이유진&#10;날짜 / 경련 횟수 / 지속시간 / 상황&#10;2025-01-03 / 1회 / 2분 / 오전 활동 중&#10;2025-01-08 / 2회 / 1분30초, 3분 / 점심 식사 후&#10;2025-01-15 / 1회 / 4분 / 저녁 이동 중&#10;투약: 데파코트 500mg 1일 2회 복용 중"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="runAlert()" id="alert-btn"><i class="ti ti-sparkles"></i> AI 패턴 분석</button>
+        <button class="btn-secondary" onclick="clearResult('alert-result','alert-btn')">초기화</button>
+      </div>
+      <div class="result-box" id="alert-result">
+        <button class="btn-secondary copy-btn" onclick="copyResult('alert-result-text')"><i class="ti ti-copy"></i> 복사</button>
+        <span id="alert-result-text"></span>
+      </div>
+    </div>
+  </div>
+
+  <footer>늘푸른동산 AI 도우미 · Powered by Claude</footer>
+</div>
+
+<script>
+const SEL = { doc: '팀장회의 회의록', alert: '경련 기록 패턴' };
+const chatHistory = [];
+
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+  document.getElementById('t-' + id).classList.add('active');
+}
+
+function selTag(el, group) {
+  el.closest('.tag-row').querySelectorAll('.tag').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  SEL[group] = el.textContent.trim();
+}
+
+async function callClaude(system, user, resultId, textId, btnId) {
+  const box = document.getElementById(resultId);
+  const textEl = document.getElementById(textId);
+  const btn = document.getElementById(btnId);
+  btn.disabled = true;
+  box.classList.add('show');
+  textEl.innerHTML = '<span class="loading-dots">AI가 분석 중입니다</span>';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        system, messages: [{ role: 'user', content: user }]
+      })
+    });
+    const data = await res.json();
+    textEl.textContent = data.content?.map(c => c.text || '').join('') || '응답 오류';
+  } catch(e) {
+    textEl.textContent = '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+  }
+  btn.disabled = false;
+}
+
+function runDoc() {
+  const content = document.getElementById('doc-input').value.trim();
+  if (!content) return alert('내용을 입력해주세요.');
+  callClaude(
+    '당신은 복지관 문서 작성 전문가입니다. 입력된 핵심 내용을 바탕으로 전문적인 문서 초안을 한국어로 작성하세요. 모르는 정보는 [  ] 빈칸으로 남기세요.',
+    `문서 유형: ${SEL.doc}\n\n핵심 내용:\n${content}`,
+    'doc-result', 'doc-result-text', 'doc-btn'
+  );
+}
+
+function runCare() {
+  const name = document.getElementById('care-name').value.trim() || '이용인';
+  const content = document.getElementById('care-input').value.trim();
+  if (!content) return alert('기록을 입력해주세요.');
+  callClaude(
+    '당신은 장애인복지관 사회복지사입니다. 이용인의 활동 기록을 바탕으로 월별 케어 요약 리포트를 작성하세요. 출석 현황, 프로그램 참여, 행동·정서 변화, 특이사항, 향후 케어 방향을 포함하세요.',
+    `이용인: ${name}\n\n기록:\n${content}`,
+    'care-result', 'care-result-text', 'care-btn'
+  );
+}
+
+function runVehicle() {
+  const log = document.getElementById('v-input').value.trim();
+  if (!log) return alert('운행 기록을 입력해주세요.');
+  const km = document.getElementById('v-km').value.trim();
+  const oil = document.getElementById('v-oil').value.trim();
+  const tire = document.getElementById('v-tire').value.trim();
+  callClaude(
+    '당신은 차량 관리 전문가입니다. 복지관 차량 운행·정비 기록을 분석해 월간 통계, 이상 징후, 정비 권고사항을 안전 우선으로 제공하세요.',
+    `운행거리: ${km||'미입력'} / 오일교환: ${oil||'미입력'} / 타이어점검: ${tire||'미입력'}\n\n운행기록:\n${log}`,
+    'v-result', 'v-result-text', 'v-btn'
+  );
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const btn = document.getElementById('chat-btn');
+  addChatMsg('user', '나', msg);
+  input.value = '';
+  btn.disabled = true;
+  chatHistory.push({ role: 'user', content: msg });
+  const typingDiv = addChatMsg('ai', 'AI 도우미', '<span class="loading-dots">입력 중</span>');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+        system: '당신은 늘푸른동산 장애인복지관의 업무 안내 AI 도우미입니다. 직원들의 행정·업무 질문에 친절하고 정확하게 답변하세요. 차량 신청, 재택근무, 강당 예약, 투약의뢰, 활동일지, 공문 등을 안내합니다.',
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.map(c => c.text || '').join('') || '오류';
+    typingDiv.querySelector('.bubble').textContent = reply;
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    typingDiv.querySelector('.bubble').textContent = '오류가 발생했습니다.';
+  }
+  btn.disabled = false;
+  document.getElementById('chat-wrap').scrollTop = 9999;
+}
+
+function addChatMsg(role, who, html) {
+  const wrap = document.getElementById('chat-wrap');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.innerHTML = `<div class="who">${who}</div><div class="bubble">${html}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = 9999;
+  return div;
+}
+
+function quickAsk(q) {
+  document.getElementById('chat-input').value = q;
+  sendChat();
+}
+
+function runAlert() {
+  const content = document.getElementById('alert-input').value.trim();
+  if (!content) return alert('기록 데이터를 입력해주세요.');
+  callClaude(
+    '당신은 장애인복지관 의료 기록 분석 전문가입니다. 기록 데이터에서 이상 패턴과 주의 징후를 식별하고, 요약 보고 및 전문가 상담 연계 권고를 작성하세요.',
+    `분석 유형: ${SEL.alert}\n\n기록:\n${content}`,
+    'alert-result', 'alert-result-text', 'alert-btn'
+  );
+}
+
+function clearResult(resultId, btnId) {
+  document.getElementById(resultId).classList.remove('show');
+  document.getElementById(btnId).disabled = false;
+}
+
+function copyResult(textId) {
+  navigator.clipboard.writeText(document.getElementById(textId).textContent || '')
+    .then(() => alert('클립보드에 복사되었습니다.'));
+}
+</script>
+</body>
+</html>
